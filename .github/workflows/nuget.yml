@@ -1,4 +1,4 @@
-name: .Net Standard
+name: nuget
 on:
   push:
     branches:
