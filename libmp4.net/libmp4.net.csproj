@@ -6,7 +6,6 @@
     <Authors>Jason Davis</Authors>
     <Company />
     <Version>1.5.2</Version>
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageProjectUrl>https://github.com/jasondavis303/libmp4.net</PackageProjectUrl>
     <RepositoryUrl>https://github.com/jasondavis303/libmp4.net</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
