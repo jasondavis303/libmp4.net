@@ -5,11 +5,11 @@
     <LangVersion>8.0</LangVersion>
     <Authors>Jason Davis</Authors>
     <Company />
-    <Version>1.5.3</Version>
+    <Version>1.5.4</Version>
     <PackageProjectUrl>https://github.com/jasondavis303/libmp4.net</PackageProjectUrl>
     <RepositoryUrl>https://github.com/jasondavis303/libmp4.net</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
-    <PackageReleaseNotes>Added github badge</PackageReleaseNotes>
+    <PackageReleaseNotes></PackageReleaseNotes>
     <PackageLicenseFile>gpl-3.0.txt</PackageLicenseFile>
   </PropertyGroup>
 
