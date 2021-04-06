@@ -15,6 +15,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workflows", "workflows", "{
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{9A3308FA-749F-4451-B913-C83854F6D9D2}"
 	ProjectSection(SolutionItems) = preProject
+		GPLv3.svg = GPLv3.svg
 		README.md = README.md
 	EndProjectSection
 EndProject
