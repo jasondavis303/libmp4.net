@@ -5,11 +5,11 @@
     <LangVersion>8.0</LangVersion>
     <Authors>Jason Davis</Authors>
     <Company />
-    <Version>1.5.2</Version>
+    <Version>1.5.3</Version>
     <PackageProjectUrl>https://github.com/jasondavis303/libmp4.net</PackageProjectUrl>
     <RepositoryUrl>https://github.com/jasondavis303/libmp4.net</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
-    <PackageReleaseNotes>Added ability to read tags from http stream</PackageReleaseNotes>
+    <PackageReleaseNotes>Added github badge</PackageReleaseNotes>
     <PackageLicenseFile>gpl-3.0.txt</PackageLicenseFile>
   </PropertyGroup>
 
