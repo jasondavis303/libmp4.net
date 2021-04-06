@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.30804.86
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "libmp4.net", "libmp4.net\libmp4.net.csproj", "{720B52C8-79B7-4BCF-A939-27FD17C4C4E9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "libmp4.net", "libmp4.net\libmp4.net.csproj", "{720B52C8-79B7-4BCF-A939-27FD17C4C4E9}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ",github", ",github", "{57E040BB-D34D-4186-8859-E53A5CD4D46B}"
 EndProject
@@ -32,6 +32,7 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
+		{57E040BB-D34D-4186-8859-E53A5CD4D46B} = {9A3308FA-749F-4451-B913-C83854F6D9D2}
 		{F79CE6FB-5224-44B2-9207-29603202F862} = {57E040BB-D34D-4186-8859-E53A5CD4D46B}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
