@@ -1,0 +1,25 @@
+name: release
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Setup .NET Core
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: 5.0.x
+
+      - name: Build
+        run: |
+          curl --location --output tsv https://github.com/jasondavis303/TimestampVersion/releases/latest/download/tsv
+          chmod +x tsv
+          ./tsv --xml-files libmp4.net/libmp4.net.csproj --verbose
+          dotnet pack -c release -o nuget
+          dotnet nuget push "nuget/*.nupkg" --skip-duplicate -k ${{secrets.NUGET_API_KEY}} -s https://api.nuget.org/v3/index.json
