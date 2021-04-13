@@ -10,6 +10,7 @@
     <RepositoryType>git</RepositoryType>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <Copyright>Jason Davis</Copyright>
+    <Description>.Net Standard library to read and write metadata tags in mp4 files</Description>
   </PropertyGroup>
 
 
