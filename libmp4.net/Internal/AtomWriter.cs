@@ -162,7 +162,7 @@ namespace libmp4.net.Internal
             */
 
 
-            progress?.Report(new FileProgress("Preparing data", 0, 0));
+            progress?.Report(new FileProgress("Preparing data", 0, 0, false));
 
             Atom ftyp = atoms.First(item => item.Name == "ftyp");
             src.Seek(ftyp.OriginalPosition + ftyp.HeaderSize, SeekOrigin.Begin);
@@ -204,22 +204,22 @@ namespace libmp4.net.Internal
                 }
 
                 //Write output
-                progress?.Report(new FileProgress("Writing file", 0, 0));
+                progress?.Report(new FileProgress("Writing file", 0, 0, false));
 
                 src.Seek(0, SeekOrigin.Begin);
                 WriteAtom(src, ftyp);
-                progress?.Report(new FileProgress("Writing file", 100, 33));
+                progress?.Report(new FileProgress("Writing file", 100, 33, false));
 
                 WriteAtom(src, moov);
-                progress?.Report(new FileProgress("Writing file", 100, 66));
+                progress?.Report(new FileProgress("Writing file", 100, 66, false));
                 
                 if (free != null)
                     WriteAtom(src, free);
-                progress?.Report(new FileProgress("Writing file", 100, 99));
+                progress?.Report(new FileProgress("Writing file", 100, 99, false));
 
                 //Truncate
                 src.SetLength(atoms.Sum(item => item.Size));
-                progress?.Report(new FileProgress("Writing file", 1, 1));
+                progress?.Report(new FileProgress("Writing file", 1, 1, true));
 
             }
             else
@@ -246,13 +246,13 @@ namespace libmp4.net.Internal
                         };
                         atoms.Insert(moovIdx, free);
 
-                        progress?.Report(new FileProgress("Writing file", 0, 0));
+                        progress?.Report(new FileProgress("Writing file", 0, 0, false));
                         src.Seek(moov.OriginalPosition, SeekOrigin.Begin);
                         WriteAtom(src, free);
                     }
 
                     //Drop all free atoms at the end
-                    progress?.Report(new FileProgress("Writing file", 100, 50));
+                    progress?.Report(new FileProgress("Writing file", 100, 50, false));
                     atoms.Remove(moov);
                     while (FreeNames.Contains(atoms[atoms.Count - 1].Name))
                     {
@@ -262,10 +262,10 @@ namespace libmp4.net.Internal
                     long start = atoms.Sum(item => item.Size);
                     src.Seek(start, SeekOrigin.Begin);
                     WriteAtom(src, moov);
-                    progress?.Report(new FileProgress("Writing file", 100, 99));
+                    progress?.Report(new FileProgress("Writing file", 100, 99, false));
 
                     src.SetLength(start + moov.Size);
-                    progress?.Report(new FileProgress("Writing file", 1, 1));
+                    progress?.Report(new FileProgress("Writing file", 1, 1, true));
                 }
             }
         }
@@ -334,7 +334,7 @@ namespace libmp4.net.Internal
 
         static async Task WriteNewFileAsync(Stream src, string destinationFile, List<Atom> atoms, IProgress<FileProgress> progress, CancellationToken cancellationToken)
         {
-            progress?.Report(new FileProgress("Preparing to write file", 0, 0));
+            progress?.Report(new FileProgress("Preparing to write file", 0, 0, false));
             double totalSize = 0;
             double currentPos = 0;
             try { totalSize = src.Length; }
@@ -368,7 +368,7 @@ namespace libmp4.net.Internal
 
             //Write output
             IProgress<FileProgress> writeProgress = new Progress<FileProgress>((p) => 
-                progress?.Report(new FileProgress("Writing file", totalSize, currentPos + p.CurrentPosition)));
+                progress?.Report(new FileProgress("Writing file", totalSize, currentPos + p.CurrentPosition, false)));
 
             using FileStream dst = new FileStream(destinationFile, FileMode.Create, FileAccess.Write, FileShare.Read, IO.BUFFER_SIZE, FileOptions.Asynchronous);
             foreach (Atom atom in atoms)
@@ -377,18 +377,18 @@ namespace libmp4.net.Internal
                 {
                     WriteAtom(dst, atom);
                     currentPos += atom.Size;
-                    progress?.Report(new FileProgress("Writing file", totalSize, currentPos));
+                    progress?.Report(new FileProgress("Writing file", totalSize, currentPos, false));
                 }
                 else
                 {
                     src.Seek(atom.OriginalPosition, SeekOrigin.Begin);
                     await IO.CopyDataAsync(src, dst, atom.Size, writeProgress, cancellationToken).ConfigureAwait(false);
                     currentPos += atom.Size;
-                    progress?.Report(new FileProgress("Writing file", totalSize, currentPos));
+                    progress?.Report(new FileProgress("Writing file", totalSize, currentPos, false));
                 }
             }
 
-            progress?.Report(new FileProgress("Writing file", 1, 1));
+            progress?.Report(new FileProgress("Writing file", 1, 1, true));
         }
 
         static List<Atom> Prep_moov(Stream src, Metadata metadata)
@@ -784,37 +784,33 @@ namespace libmp4.net.Internal
                         stbl.Children.Add(co64);
                         stbl.Children.Remove(stco);
 
-                        using (MemoryStream ms = new MemoryStream(stco.Data))
-                        {
-                            ms.Seek(4, SeekOrigin.Begin);
-                            uint count = IO.Read_uint(ms);
-                            co64.Data = new byte[4 + (count * 8)];
-                            IO.Write_uint(co64.Data, count, 0);
+                        using MemoryStream ms = new MemoryStream(stco.Data);
+                        ms.Seek(4, SeekOrigin.Begin);
+                        uint count = IO.Read_uint(ms);
+                        co64.Data = new byte[4 + (count * 8)];
+                        IO.Write_uint(co64.Data, count, 0);
 
-                            int writeOffset = 4;
-                            for (uint i = 0; i < count; i++)
-                            {
-                                long chunkOffset = IO.Read_uint(ms);
-                                if (chunkOffset >= startRange && chunkOffset <= endRange)
-                                    IO.Write_ulong(co64.Data, (ulong)(chunkOffset + adjustBy), writeOffset);
-                                writeOffset += 8;
-                            }
+                        int writeOffset = 4;
+                        for (uint i = 0; i < count; i++)
+                        {
+                            long chunkOffset = IO.Read_uint(ms);
+                            if (chunkOffset >= startRange && chunkOffset <= endRange)
+                                IO.Write_ulong(co64.Data, (ulong)(chunkOffset + adjustBy), writeOffset);
+                            writeOffset += 8;
                         }
                     }
                     else
                     {
                         //Update 64 bit
 
-                        using (MemoryStream ms = new MemoryStream(co64.Data))
+                        using MemoryStream ms = new MemoryStream(co64.Data);
+                        ms.Seek(4, SeekOrigin.Begin);
+                        uint count = IO.Read_uint(ms);
+                        for (uint i = 0; i < count; i++)
                         {
-                            ms.Seek(4, SeekOrigin.Begin);
-                            uint count = IO.Read_uint(ms);
-                            for (uint i = 0; i < count; i++)
-                            {
-                                ulong chunkOffset = IO.Read_ulong(ms);
-                                if (chunkOffset >= (ulong)startRange && chunkOffset <= (ulong)endRange)
-                                    IO.Write_ulong(co64.Data, chunkOffset + (ulong)adjustBy, (int)(ms.Position - 8));
-                            }
+                            ulong chunkOffset = IO.Read_ulong(ms);
+                            if (chunkOffset >= (ulong)startRange && chunkOffset <= (ulong)endRange)
+                                IO.Write_ulong(co64.Data, chunkOffset + (ulong)adjustBy, (int)(ms.Position - 8));
                         }
                     }
                 }
@@ -828,37 +824,33 @@ namespace libmp4.net.Internal
                         stbl.Children.Add(stco);
                         stbl.Children.Remove(co64);
 
-                        using (MemoryStream ms = new MemoryStream(co64.Data))
-                        {
-                            ms.Seek(4, SeekOrigin.Begin);
-                            uint count = IO.Read_uint(ms);
-                            stco.Data = new byte[4 + (count * 4)];
-                            IO.Write_uint(stco.Data, count, 0);
+                        using MemoryStream ms = new MemoryStream(co64.Data);
+                        ms.Seek(4, SeekOrigin.Begin);
+                        uint count = IO.Read_uint(ms);
+                        stco.Data = new byte[4 + (count * 4)];
+                        IO.Write_uint(stco.Data, count, 0);
 
-                            int writeOffset = 4;
-                            for (uint i = 0; i < count; i++)
-                            {
-                                long chunkOffset = (long)IO.Read_ulong(ms);
-                                if (chunkOffset >= startRange && chunkOffset <= endRange)
-                                    IO.Write_uint(stco.Data, (uint)(chunkOffset + adjustBy), writeOffset);
-                                writeOffset += 4;
-                            }
+                        int writeOffset = 4;
+                        for (uint i = 0; i < count; i++)
+                        {
+                            long chunkOffset = (long)IO.Read_ulong(ms);
+                            if (chunkOffset >= startRange && chunkOffset <= endRange)
+                                IO.Write_uint(stco.Data, (uint)(chunkOffset + adjustBy), writeOffset);
+                            writeOffset += 4;
                         }
                     }
                     else
                     {
                         //Update 32 bit
 
-                        using (MemoryStream ms = new MemoryStream(stco.Data))
+                        using MemoryStream ms = new MemoryStream(stco.Data);
+                        ms.Seek(4, SeekOrigin.Begin);
+                        uint count = IO.Read_uint(ms);
+                        for (uint i = 0; i < count; i++)
                         {
-                            ms.Seek(4, SeekOrigin.Begin);
-                            uint count = IO.Read_uint(ms);
-                            for (uint i = 0; i < count; i++)
-                            {
-                                uint chunkOffset = IO.Read_uint(ms);
-                                if (chunkOffset >= startRange && chunkOffset <= endRange)
-                                    IO.Write_uint(stco.Data, (uint)(chunkOffset + adjustBy), (int)(ms.Position - 4));
-                            }
+                            uint chunkOffset = IO.Read_uint(ms);
+                            if (chunkOffset >= startRange && chunkOffset <= endRange)
+                                IO.Write_uint(stco.Data, (uint)(chunkOffset + adjustBy), (int)(ms.Position - 4));
                         }
                     }
                 }
