@@ -1,10 +1,6 @@
 ﻿using libmp4.net.Internal;
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Text;
-using System.Xml;
-using System.Xml.Serialization;
 
 namespace libmp4.net
 {
