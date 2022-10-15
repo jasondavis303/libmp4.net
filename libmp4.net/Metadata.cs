@@ -1,6 +1,11 @@
 ﻿using libmp4.net.Internal;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Text;
+using System.Xml;
+using System.Xml.Serialization;
 
 namespace libmp4.net
 {
@@ -37,6 +42,8 @@ namespace libmp4.net
         /// This is the binary data of artwork. There can be more than image in a file, so this is in a list.
         /// Since there is no System.Drawing.Image in .netstandard2.0, I'm just using a byte array
         /// </summary>
+        [XmlIgnore]
+        [JsonIgnore]
         public List<byte[]> Artwork { get; } = new List<byte[]>();
 
         /// <summary>
@@ -334,5 +341,28 @@ namespace libmp4.net
 
             return "unknown";
         }
+        
+        public string ToXml()
+        {
+            using MemoryStream ms = new MemoryStream();
+            new XmlSerializer(typeof(Metadata)).Serialize(ms, this);
+            return Encoding.UTF8.GetString(ms.ToArray());
+        }
+
+        public string ToJson() => JsonConvert.SerializeObject(this, JsonSettings);
+
+        public static Metadata FromXml(string xml)
+        {
+            using MemoryStream ms = new MemoryStream(Encoding.UTF8.GetBytes(xml));
+            return (Metadata)new XmlSerializer(typeof(Metadata)).Deserialize(ms);
+        }
+
+        public static Metadata FromJson(string json) => JsonConvert.DeserializeObject<Metadata>(json);
+
+        private static readonly JsonSerializerSettings JsonSettings = new JsonSerializerSettings
+        {
+            Formatting = Newtonsoft.Json.Formatting.Indented,
+            DateFormatString = "yyyy'-'MM'-'dd"
+        };
     }
 }

@@ -2,21 +2,18 @@
 {
     public class FileProgress
     {
-        internal FileProgress(string status, double totalSize, double curPos, bool done)
+        internal FileProgress(string status, double totalSize, double curPos)
         {
             Status = status;
             TotalSize = totalSize;
             CurrentPosition = curPos;
-            Percent = TotalSize == 0 ? 0 : CurrentPosition / TotalSize;
-            Done = done;
         }
 
-        internal double TotalSize { get; }
-        internal double CurrentPosition { get; }
+        internal double TotalSize { get; set; }
+        internal double CurrentPosition { get; set; }
 
-        public string Status { get; }
-        public double Percent { get; }
-        public bool Done { get; }
+        public string Status { get; set; }
+        public double Percent => TotalSize == 0 ? 0 : CurrentPosition / TotalSize;
 
         public override string ToString() => $"{Status}: {Percent:0.00%}";
     }

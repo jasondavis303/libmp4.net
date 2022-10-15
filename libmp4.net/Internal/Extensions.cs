@@ -51,7 +51,7 @@ namespace libmp4.net.Internal
 
 
 
-        private static readonly Dictionary<VideoRating, string> Map = new Dictionary<VideoRating, string>
+        private static Dictionary<VideoRating, string> Map = new Dictionary<VideoRating, string>
         {
             { VideoRating.None,               null },
 

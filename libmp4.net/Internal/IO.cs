@@ -39,7 +39,7 @@ namespace libmp4.net.Internal
                 cnt -= read;
 
                 totalCopied += read;
-                progress?.Report(new FileProgress("Copying", totalSize, totalCopied, false));
+                progress?.Report(new FileProgress("Copying", totalSize, totalCopied));
 
             } while (read > 0 && cnt > 0);
         }
