@@ -134,7 +134,7 @@ namespace libmp4.net.Internal
             base.Dispose(disposing);
         }
 
-    
+
         private new void Dispose()
         {
             if (_diskStream != null)

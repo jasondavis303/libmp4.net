@@ -4,7 +4,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using System.Xml;
 using System.Xml.Serialization;
 
 namespace libmp4.net
@@ -20,7 +19,7 @@ namespace libmp4.net
         /// ©alb
         /// </summary>
         public string Album { get; set; }
-        
+
         /// <summary>
         /// aART
         /// </summary>
@@ -139,7 +138,7 @@ namespace libmp4.net
         /// This cannot be used with the <see cref="MusicGenre"/> field. This takes precedense if it contains values.
         /// </summary>
         public List<string> Genres { get; } = new List<string>();
-        
+
         /// <summary>
         /// ©grp
         /// </summary>
@@ -255,7 +254,7 @@ namespace libmp4.net
         /// sosn
         /// </summary>
         public string SortTVShow { get; set; }
-        
+
         /// <summary>
         /// ----.(name=iTunMOVI)
         /// </summary>
@@ -306,7 +305,7 @@ namespace libmp4.net
         /// hdvd
         /// </summary>
         public VideoResolution? VideoResolution { get; set; }
-                 
+
         /// <summary>
         /// "xid "
         /// </summary>
@@ -341,7 +340,7 @@ namespace libmp4.net
 
             return "unknown";
         }
-        
+
         public string ToXml()
         {
             using MemoryStream ms = new MemoryStream();

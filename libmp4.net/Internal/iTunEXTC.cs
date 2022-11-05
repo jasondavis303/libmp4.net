@@ -18,7 +18,7 @@ namespace libmp4.net.Internal
         {
             try { return Read(Encoding.UTF8.GetString(data)); }
             catch { return new iTunEXTC(); }
-        }        
+        }
 
         public static iTunEXTC Read(string text)
         {

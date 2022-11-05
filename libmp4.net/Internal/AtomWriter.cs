@@ -2,10 +2,8 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Xml;
 
 namespace libmp4.net.Internal
 {
@@ -21,12 +19,12 @@ namespace libmp4.net.Internal
                 WriteNewFile(sourceFile, destinationFile, metadata);
         }
 
-        public static Task WriteAsync(string sourceFile, string destinationFile, Metadata metadata, bool fastStart, IProgress<FileProgress> progress, CancellationToken cancellationToken)
+        public static Task WriteAsync(string sourceFile, string destinationFile, Metadata metadata, bool fastStart, IProgress<FileProgress> progress, object eventSender, EventHandler<FileProgress> eventHandler, CancellationToken cancellationToken)
         {
             if (sourceFile.Equals(destinationFile))
-                return OverwriteAsync(sourceFile, metadata, fastStart, progress, cancellationToken);
+                return OverwriteAsync(sourceFile, metadata, fastStart, progress, eventSender, eventHandler, cancellationToken);
             else
-                return WriteNewFileAsync(sourceFile, destinationFile, metadata, progress, cancellationToken);
+                return WriteNewFileAsync(sourceFile, destinationFile, metadata, progress, eventSender, eventHandler, cancellationToken);
         }
 
         static void Overwrite(string fileName, Metadata metadata, bool fastStart)
@@ -126,7 +124,7 @@ namespace libmp4.net.Internal
                         src.Seek(moov.OriginalPosition, SeekOrigin.Begin);
                         WriteAtom(src, free);
                     }
-                    
+
                     //Drop all free atoms at the end
                     atoms.Remove(moov);
                     while (FreeNames.Contains(atoms[atoms.Count - 1].Name))
@@ -142,7 +140,7 @@ namespace libmp4.net.Internal
             }
         }
 
-        static async Task OverwriteAsync(string fileName, Metadata metadata, bool fastStart, IProgress<FileProgress> progress, CancellationToken cancellationToken)
+        static async Task OverwriteAsync(string fileName, Metadata metadata, bool fastStart, IProgress<FileProgress> progress, object eventSender, EventHandler<FileProgress> eventHandler, CancellationToken cancellationToken)
         {
             using var src = GetStream(fileName);
 
@@ -161,7 +159,7 @@ namespace libmp4.net.Internal
                             write moov atom at the end
             */
 
-
+            eventHandler?.Invoke(eventSender, new FileProgress("Preparing data", 0, 0));
             progress?.Report(new FileProgress("Preparing data", 0, 0));
 
             Atom ftyp = atoms.First(item => item.Name == "ftyp");
@@ -204,21 +202,26 @@ namespace libmp4.net.Internal
                 }
 
                 //Write output
+                eventHandler?.Invoke(eventSender, new FileProgress("Writing file", 0, 0));
                 progress?.Report(new FileProgress("Writing file", 0, 0));
 
                 src.Seek(0, SeekOrigin.Begin);
                 WriteAtom(src, ftyp);
+                eventHandler?.Invoke(eventSender, new FileProgress("Writing file", 100, 33));
                 progress?.Report(new FileProgress("Writing file", 100, 33));
 
                 WriteAtom(src, moov);
+                eventHandler?.Invoke(eventSender, new FileProgress("Writing file", 100, 66));
                 progress?.Report(new FileProgress("Writing file", 100, 66));
-                
+
                 if (free != null)
                     WriteAtom(src, free);
+                eventHandler?.Invoke(eventSender, new FileProgress("Writing file", 100, 99));
                 progress?.Report(new FileProgress("Writing file", 100, 99));
 
                 //Truncate
                 src.SetLength(atoms.Sum(item => item.Size));
+                eventHandler?.Invoke(eventSender, new FileProgress("Writing file", 1, 1));
                 progress?.Report(new FileProgress("Writing file", 1, 1));
 
             }
@@ -227,7 +230,7 @@ namespace libmp4.net.Internal
                 if (fastStart)
                 {
                     string tmpFile = fileName + ".tmp";
-                    await WriteNewFileAsync(src, tmpFile, atoms, progress, cancellationToken).ConfigureAwait(false);
+                    await WriteNewFileAsync(src, tmpFile, atoms, progress, eventSender, eventHandler, cancellationToken).ConfigureAwait(false);
                     src.Dispose();
                     File.Delete(fileName);
                     File.Move(tmpFile, fileName);
@@ -279,13 +282,13 @@ namespace libmp4.net.Internal
             WriteNewFile(src, destinationFile, atoms);
         }
 
-        static async Task WriteNewFileAsync(string sourceFile, string destinationFile, Metadata metadata, IProgress<FileProgress> progress, CancellationToken cancellationToken)
+        static async Task WriteNewFileAsync(string sourceFile, string destinationFile, Metadata metadata, IProgress<FileProgress> progress, object eventSender, EventHandler<FileProgress> eventHandler, CancellationToken cancellationToken)
         {
             using var src = GetStream(sourceFile);
 
             List<Atom> atoms = Prep_moov(src, metadata);
 
-            await WriteNewFileAsync(src, destinationFile, atoms, progress, cancellationToken).ConfigureAwait(false);
+            await WriteNewFileAsync(src, destinationFile, atoms, progress, eventSender, eventHandler, cancellationToken).ConfigureAwait(false);
         }
 
         static void WriteNewFile(Stream src, string destinationFile, List<Atom> atoms)
@@ -332,8 +335,9 @@ namespace libmp4.net.Internal
             }
         }
 
-        static async Task WriteNewFileAsync(Stream src, string destinationFile, List<Atom> atoms, IProgress<FileProgress> progress, CancellationToken cancellationToken)
+        static async Task WriteNewFileAsync(Stream src, string destinationFile, List<Atom> atoms, IProgress<FileProgress> progress, object eventSender, EventHandler<FileProgress> eventHandler, CancellationToken cancellationToken)
         {
+            eventHandler?.Invoke(eventSender, new FileProgress("Preparing to write file", 0, 0));
             progress?.Report(new FileProgress("Preparing to write file", 0, 0));
             double totalSize = 0;
             double currentPos = 0;
@@ -367,8 +371,8 @@ namespace libmp4.net.Internal
 
 
             //Write output
-            IProgress<FileProgress> writeProgress = new Progress<FileProgress>((p) => 
-                progress?.Report(new FileProgress("Writing file", totalSize, currentPos + p.CurrentPosition)));
+            //IProgress<FileProgress> writeProgress = new Progress<FileProgress>((p) => 
+            //    progress?.Report(new FileProgress("Writing file", totalSize, currentPos + p.CurrentPosition)));
 
             using FileStream dst = new FileStream(destinationFile, FileMode.Create, FileAccess.Write, FileShare.Read, IO.BUFFER_SIZE, FileOptions.Asynchronous);
             foreach (Atom atom in atoms)
@@ -377,17 +381,19 @@ namespace libmp4.net.Internal
                 {
                     WriteAtom(dst, atom);
                     currentPos += atom.Size;
+                    eventHandler?.Invoke(eventSender, new FileProgress("Writing file", totalSize, currentPos));
                     progress?.Report(new FileProgress("Writing file", totalSize, currentPos));
                 }
                 else
                 {
                     src.Seek(atom.OriginalPosition, SeekOrigin.Begin);
-                    await IO.CopyDataAsync(src, dst, atom.Size, writeProgress, cancellationToken).ConfigureAwait(false);
+                    await IO.CopyDataAsync(src, dst, atom.Size, progress, eventSender, eventHandler, cancellationToken).ConfigureAwait(false);
                     currentPos += atom.Size;
                     progress?.Report(new FileProgress("Writing file", totalSize, currentPos));
                 }
             }
 
+            eventHandler?.Invoke(eventSender, new FileProgress("Writing file", 1, 1));
             progress?.Report(new FileProgress("Writing file", 1, 1));
         }
 
@@ -421,7 +427,7 @@ namespace libmp4.net.Internal
 
             if (ilst.Children.Count == 0)
                 moov.Children.RemoveAll(item => item.Name == "udta");
-            
+
             moov.RecalculateSize();
 
             return atoms;
@@ -563,7 +569,7 @@ namespace libmp4.net.Internal
 
                 Atom data = new Atom { Name = "data", Parent = itunes };
                 itunes.Children.Add(data);
-                data.DataType = DataType.UTF8;                                
+                data.DataType = DataType.UTF8;
                 data.Data = movi.ToData();
             }
         }
@@ -762,7 +768,7 @@ namespace libmp4.net.Internal
 
             BuildStringTag(ilst, name, val.Value.ToString("yyyy-MM-dd"));
         }
-        
+
         static void UpdateChunkOffsets(Atom moov, long adjustBy, long startRange, long endRange, bool x64)
         {
             if (adjustBy == 0)
@@ -876,7 +882,7 @@ namespace libmp4.net.Internal
             if (atom.HasPaddedName)
                 dst.Seek(4, SeekOrigin.Current);
 
-            if(atom.IsDataAtom)
+            if (atom.IsDataAtom)
             {
                 dst.Write(new byte[3], 0, 3);
                 dst.WriteByte((byte)atom.DataType);
@@ -887,9 +893,9 @@ namespace libmp4.net.Internal
                 atom.Children.ForEach(item => WriteAtom(dst, item));
             else
                 dst.Write(atom.Data, 0, atom.Data.Length);
-            
+
         }
-    
+
         static Stream GetStream(string source)
         {
             string ls = source.ToLower();
@@ -898,6 +904,6 @@ namespace libmp4.net.Internal
 
             return new FileStream(source, FileMode.Open, FileAccess.ReadWrite, FileShare.Read, IO.BUFFER_SIZE, FileOptions.RandomAccess);
         }
-    
+
     }
 }

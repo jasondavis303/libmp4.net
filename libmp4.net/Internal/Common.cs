@@ -22,7 +22,7 @@ namespace libmp4.net.Internal
         public const string iTunesAtom = "moov.udta.meta.ilst.----";
         public const string iTunesDataAtom = "moov.udta.meta.ilst.----.data";
 
-        public static readonly string[] PaddedNames = new string[] 
+        public static readonly string[] PaddedNames = new string[]
         {
             "moov.udta.meta",
             "moov.udta.meta.ilst.----.mean",

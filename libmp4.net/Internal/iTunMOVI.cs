@@ -15,7 +15,7 @@ namespace libmp4.net.Internal
         public List<string> ScreenWriters { get; set; } = new List<string>();
         public string Studio { get; set; }
 
-        private bool ListHasData(List<string> lst) =>  lst
+        private bool ListHasData(List<string> lst) => lst
             .Where(item => !string.IsNullOrWhiteSpace(item))
             .Select(item => item.Trim())
             .Distinct()

@@ -8,7 +8,7 @@ namespace libmp4.net.Internal
     static class IO
     {
         public const int BUFFER_SIZE = 1024 * 1024;
-        
+
 
         public static void CopyData(Stream src, Stream dst, long cnt)
         {
@@ -23,7 +23,7 @@ namespace libmp4.net.Internal
             } while (read > 0 && cnt > 0);
         }
 
-        public static async Task CopyDataAsync(Stream src, Stream dst, long cnt, IProgress<FileProgress> progress, CancellationToken cancellationToken)
+        public static async Task CopyDataAsync(Stream src, Stream dst, long cnt, IProgress<FileProgress> progress, object eventSender, EventHandler<FileProgress> eventHandler, CancellationToken cancellationToken)
         {
             double totalSize = cnt;
             double totalCopied = 0;
@@ -39,7 +39,8 @@ namespace libmp4.net.Internal
                 cnt -= read;
 
                 totalCopied += read;
-                progress?.Report(new FileProgress("Copying", totalSize, totalCopied));
+                eventHandler?.Invoke(eventSender, new FileProgress("Writing file", totalSize, totalCopied));
+                progress?.Report(new FileProgress("Writing file", totalSize, totalCopied));
 
             } while (read > 0 && cnt > 0);
         }
@@ -99,7 +100,7 @@ namespace libmp4.net.Internal
 
         public static ulong Read_ulong(byte[] data, int start = 0) => BitConverter.ToUInt64(ReadNumericData(data, start, 8), 0);
 
-        
+
 
 
         static void WriteNumericData(Stream dst, byte[] data)

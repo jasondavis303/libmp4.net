@@ -20,7 +20,7 @@ namespace libmp4.net.Internal
 
             if (cnt <= 0)
                 cnt = d1.Length;
-            
+
             if (d1.Length < cnt || d2.Length < cnt)
                 return false;
 

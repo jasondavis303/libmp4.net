@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Xml;
 
 namespace libmp4.net.Internal
 {
@@ -32,7 +31,7 @@ namespace libmp4.net.Internal
             List<Atom> atoms = new List<Atom>();
             Metadata metadata = null;
 
-            while(src.Position < src.Length)
+            while (src.Position < src.Length)
             {
                 Atom atom = ReadAtomHeader(src);
                 atoms.Add(atom);
@@ -45,7 +44,7 @@ namespace libmp4.net.Internal
                 {
                     src.Seek(atom.DataLength, SeekOrigin.Current);
                 }
-            }           
+            }
 
             return (atoms, metadata);
         }
@@ -80,14 +79,14 @@ namespace libmp4.net.Internal
 
         static void ReadTree(Stream src, Atom parent)
         {
-            while(src.Position < parent.OriginalPosition + parent.Size)
+            while (src.Position < parent.OriginalPosition + parent.Size)
             {
                 Atom child = ReadAtomHeader(src);
                 child.Parent = parent;
                 parent.Children.Add(child);
 
                 int offset = 0;
-                if(child.HasPaddedName)
+                if (child.HasPaddedName)
                 {
                     src.Seek(4, SeekOrigin.Current);
                     offset = 4;

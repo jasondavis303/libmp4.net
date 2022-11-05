@@ -69,7 +69,7 @@ namespace libmp4.net.Internal
         public List<Atom> Children { get; } = new List<Atom>();
 
         public string Path => Parent == null ? Name : $"{Parent.Path}.{Name}";
-                     
+
         public byte[] Data { get; set; }
 
         public string DataString
@@ -88,7 +88,7 @@ namespace libmp4.net.Internal
 
         public Atom FindDescendant(string path)
         {
-            foreach(Atom child in Children)
+            foreach (Atom child in Children)
             {
                 if (child.Path == path)
                     return child;
@@ -107,12 +107,12 @@ namespace libmp4.net.Internal
             if (Common.DataAtoms.Contains(Path))
                 extraSize += 8;
 
-            if(Children.Count > 0)
+            if (Children.Count > 0)
             {
                 Children.ForEach(item => item.RecalculateSize());
                 Size = Children.Sum(item => item.Size) + HeaderSize + extraSize;
             }
-            else if(Data != null)
+            else if (Data != null)
             {
                 Size = Data.Length + HeaderSize + extraSize;
             }
