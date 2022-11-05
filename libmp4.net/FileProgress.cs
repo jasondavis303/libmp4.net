@@ -1,4 +1,6 @@
-﻿namespace libmp4.net
+﻿using System;
+
+namespace libmp4.net
 {
     public class FileProgress
     {
@@ -13,7 +15,7 @@
         internal double CurrentPosition { get; set; }
 
         public string Status { get; set; }
-        public double Percent => TotalSize == 0 ? 0 : CurrentPosition / TotalSize;
+        public double Percent => TotalSize == 0 ? 0 : Math.Max(0, Math.Min(1, CurrentPosition / TotalSize));
 
         public override string ToString() => $"{Status}: {Percent:0.00%}";
     }
